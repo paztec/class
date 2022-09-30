@@ -53,13 +53,19 @@ class Net(pl.LightningModule):
         
         return loss
 
-    def test_step(self, batch):
+    def test_step(self, batch, batch_idx):
+        total = 0
+        correct = 0
         data, gt = batch
         predict = self(data)
         loss = F.cross_entropy(predict, gt)
 
+        _, predicted = torch.max(predict.data, 1)
+        total += gt.size(0)
+        correct += (predicted == gt).sum().item()
+
         self.log('test_loss', loss)
-        self.log('test_acc', self.accuracy(predict, gt))
+        self.log('test_acc', 100 * correct // total)
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=1e-3)
@@ -68,7 +74,7 @@ class Net(pl.LightningModule):
 wandb_logger = WandbLogger(name='0',project='2022320004_도재준_과제1')
 
 net = Net()
-trainer = pl.Trainer(logger=wandb_logger, gpus=1, max_epochs=10)
+trainer = pl.Trainer(logger=wandb_logger, gpus=1, max_epochs=1)
 trainer.fit(model=net, train_dataloaders=trainloader)
 
 trainer.test(model=net, dataloaders=testloader)
