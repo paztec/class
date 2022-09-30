@@ -55,11 +55,18 @@ class Net(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
+        total = 0
+        correct = 0
         data, gt = batch
         predict = self(data)
         loss = F.cross_entropy(predict, gt)
+        
+        _, predicted = torch.max(predict.data, 1)
+        total += gt.size(0)
+        correct += (predicted == gt).sum().item()
 
         self.log('validation_loss', loss)
+        self.log('test_acc', 100 * correct // total)
         
         return loss
 
