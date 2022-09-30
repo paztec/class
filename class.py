@@ -21,7 +21,8 @@ train_transform = transforms.Compose([
 traindata = torchvision.datasets.CIFAR10(root='./', train=True, download=True, transform=train_transform)
 testdata = torchvision.datasets.CIFAR10(root='./', train=False, download=True, transform=transforms.ToTensor())
 
-trainloader = DataLoader(traindata, batch_size=100)
+trainloader = DataLoader(traindata, shuffle=True, batch_size=100)
+valloader = DataLoader(traindata, batch_size=200)
 testloader = DataLoader(testdata)
 
 class Net(pl.LightningModule):
@@ -53,6 +54,15 @@ class Net(pl.LightningModule):
         
         return loss
 
+    def validation_step(self, batch, batch_idx):
+        data, gt = batch
+        predict = self(data)
+        loss = F.cross_entropy(predict, gt)
+
+        self.log('validation_loss', loss)
+        
+        return loss
+
     def test_step(self, batch, batch_idx):
         total = 0
         correct = 0
@@ -71,11 +81,11 @@ class Net(pl.LightningModule):
         return torch.optim.Adam(self.parameters(), lr=1e-3)
 
 
-wandb_logger = WandbLogger(name='0',project='2022320004_도재준_과제1')
+wandb_logger = WandbLogger(name='fin',project='2022320004_도재준_과제1')
 
 net = Net()
 trainer = pl.Trainer(logger=wandb_logger, gpus=1, max_epochs=1)
-trainer.fit(model=net, train_dataloaders=trainloader)
+trainer.fit(model=net, train_dataloaders=trainloader, val_dataloaders=trainloader)
 
 trainer.test(model=net, dataloaders=testloader)
 
