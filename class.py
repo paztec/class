@@ -19,9 +19,9 @@ train_transform = transforms.Compose([
     
 
 traindata = torchvision.datasets.CIFAR10(root='./', train=True, download=True, transform=train_transform)
-testdata = torchvision.datasets.CIFAR10(root='./', train=False, download=True)
+testdata = torchvision.datasets.CIFAR10(root='./', train=False, download=True, transform=transforms.ToTensor())
 
-trainloader = DataLoader(traindata)
+trainloader = DataLoader(traindata, batch_size=100)
 testloader = DataLoader(testdata)
 
 class Net(pl.LightningModule):
@@ -65,12 +65,12 @@ class Net(pl.LightningModule):
         return torch.optim.Adam(self.parameters(), lr=1e-3)
 
 
-wandb_logger = WandbLogger(name='class',project='class')
+wandb_logger = WandbLogger(name='0',project='2022320004_도재준_과제1')
 
 net = Net()
-trainer = pl.Trainer(logger=wandb_logger, gpus=1)
+trainer = pl.Trainer(logger=wandb_logger, gpus=1, max_epochs=10)
 trainer.fit(model=net, train_dataloaders=trainloader)
 
-trainer.test(dataloaders=testloader)
+trainer.test(model=net, dataloaders=testloader)
 
 wandb.finish()
